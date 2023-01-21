@@ -1,5 +1,6 @@
 # discord.js-template
 A simple discord.js template </br>
+Make sure to ⭐ this repository if you found it useful </br>
 <h2>Getting Started</h2>
 
 You need to install [Node.js](https://nodejs.org/en/) and [Git](https://git-scm.com/downloads) </br>
