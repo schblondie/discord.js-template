@@ -39,14 +39,7 @@ module.exports = {
     const globalDelete = globalCommands.map((c) => c.id)                              //? This list starts with all global commands
     // Loop through global commands
     for (const command of globalCommandData) {
-      let commandJSON
-      try {
-        // Slash commands
-        commandJSON = command[1].data.toJSON()
-      } catch {
-        // Context menu commands
-        commandJSON = command[1].data
-      }
+      const commandJSON = command[1].data.toJSON()
       const globalCommand = globalCommands.find((c) => c.name === commandJSON.name)
       // Filter c values to compare with commandJSON
       const filteredC = _.pick(globalCommand, 'type', 'name', 'nameLocalizations', 'description', 'descriptionLocalization', 'options', 'defaultPermissions', 'dmPermission')
@@ -122,14 +115,7 @@ module.exports = {
       const guildUpdate = []
       const guildDelete = guildCommands.map((c) => c.id)                              //? This list starts with all global commands
       for (const command of commandData) {
-        let commandJSON
-        try {
-          // Slash commands
-          commandJSON = command[1].data.toJSON()
-        } catch {
-          // Context menu commands
-          commandJSON = command[1].data
-        }
+        const commandJSON = command[1].data.toJSON()
         if ((command[1].guilds.includes(guild[1].id) || guild[1].id === process.env.TEST_GUILD_ID)) {
           const c = guildCommands.find((c) => c.name === commandJSON.name)
           // Filter c values to compare with commandJSON
