@@ -3,12 +3,20 @@ A simple discord.js template </br>
 <h2>Getting Started</h2>
 You need to install [Node.js](https://nodejs.org/en/) and [Git](https://git-scm.com/downloads) </br>
 You can use [Visual Studio Code](https://code.visualstudio.com/) to edit the code </br>
-Please create a `.env` file in the root directory and add the following keys to it </br>
-```TOKEN=Your Discord Bot Token [https://discord.com/developers/applications]```</br>
-```TEST_GUILD_ID=Your Test Guild ID [https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-]```</br>
+Please create a `.env` file in the root directory and add the following keys to it 
+
+```javascript
+TOKEN=Your Discord Bot Token
+TEST_GUILD_ID=Your Test Guild ID
+``` 
+[How to get your bot token](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) </br>
+[How to get your guild ID](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-)</br>
 Run the following commands in the terminal to get started </br>
-```npm install```</br>
-```npm start```</br>
+
+```bash
+npm install
+npm start
+```
 </br>
 
 Use [BetterComments](https://marketplace.visualstudio.com/items?itemName=aaron-bond.better-comments) to see comments with colors
