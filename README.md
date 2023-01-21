@@ -8,7 +8,7 @@ Please create a `.env` file in the root directory and add the following keys to 
 
 ```javascript
 TOKEN=Your Discord Bot Token
-TEST_GUILD_ID=Your Test Guild-ID
+TEST_GUILD_ID=Your Test Guild Id
 ``` 
 [How to get your bot token](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) </br>
 [How to get your guild ID](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-)</br>
