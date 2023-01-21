@@ -5,3 +5,4 @@ Use [BetterComments](https://marketplace.visualstudio.com/items?itemName=aaron-b
 
 [Discord.js Docs](https://discord.js.org/#/docs/main/stable/general/welcome) </br>
 [Discord.js Guide](https://discordjs.guide/)
+[Discord.js Discord](https://discord.gg/djs)
