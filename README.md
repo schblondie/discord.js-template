@@ -16,7 +16,7 @@ Run the following commands in the terminal to get started </br>
 
 ```bash
 npm install
-npm start
+node .
 ```
 </br>
 <h2>Useful Links</h2>
