@@ -1,6 +1,7 @@
 # discord.js-template
 A simple discord.js template </br>
 <h2>Getting Started</h2>
+
 You need to install [Node.js](https://nodejs.org/en/) and [Git](https://git-scm.com/downloads) </br>
 You can use [Visual Studio Code](https://code.visualstudio.com/) to edit the code </br>
 Please create a `.env` file in the root directory and add the following keys to it 
