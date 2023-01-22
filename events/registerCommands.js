@@ -23,6 +23,13 @@ module.exports = {
    */
 
   async execute (client) {
+    function removeEmpty (obj) {
+      return Object.fromEntries(
+        Object.entries(obj)
+          .filter(([_, v]) => v != null && v != '' && v != [] && v != {})
+          .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : v])
+      )
+    }
     //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     //! DO NOT TOUCH THIS CODE UNLESS YOU KNOW WHAT YOU ARE DOING
     //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -41,44 +48,22 @@ module.exports = {
     for (const command of globalCommandData) {
       const commandJSON = command[1].data.toJSON()
       const globalCommand = globalCommands.find((c) => c.name === commandJSON.name)
-      // Filter c values to compare with commandJSON
-      const filteredC = _.pick(globalCommand, 'type', 'name', 'nameLocalizations', 'description', 'descriptionLocalization', 'options', 'defaultPermissions', 'dmPermission')
-
       /**************************************************************/
       //? Remove undefined keys and values from filteredC & commandJSON
 
-      for (const key in filteredC) {
-        if (filteredC[key] == undefined || filteredC[key] == [] || filteredC[key] == {} || filteredC[key] == '') delete filteredC[key]
-      }
+      // Filter c values to compare with commandJSON
+      let filteredC = _.pick(globalCommand, 'type', 'name', 'nameLocalizations', 'description', 'descriptionLocalization', 'options', 'defaultPermissions', 'dmPermission')
+      // Remove type when it's 1 (slash command)
       if (filteredC.type === 1) delete filteredC.type
-      Object.entries(filteredC).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach(item => {
-            Object.entries(item).forEach(([valueKey, val]) => {
-              if (val === undefined) delete item[valueKey]
-            })
-          })
-        }
-      })
+      filteredC = removeEmpty(filteredC)
       // Make a copy of commandJSON to filter
       let filteredCommandJSON = _.cloneDeep(commandJSON)
-      for (const key in filteredCommandJSON) {
-        if (filteredCommandJSON[key] == undefined || filteredCommandJSON[key] == [] || filteredCommandJSON[key] == {} || filteredCommandJSON[key] == '') delete filteredCommandJSON[key]
-      }
-      Object.entries(filteredCommandJSON).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach(item => {
-            Object.entries(item).forEach(([valueKey, val]) => {
-              if (val === undefined) delete item[valueKey]
-            })
-          })
-        }
-      })
+      filteredCommandJSON = removeEmpty(filteredCommandJSON)
       /**************************************************************/
 
       try {
         // Check if command changed
-        if (_.isMatch(filteredC, filteredCommandJSON, { deep: true }) && _.isMatch(filteredCommandJSON, filteredC, { deep: true })) {
+        if (_.isEqual(filteredC, filteredCommandJSON)) {
           globalDelete.splice(globalDelete.indexOf(command[0]), 1)
         } else {
           // Update command
@@ -94,12 +79,23 @@ module.exports = {
     if (globalUpdate.length > 0) console.log(`Updated ${globalUpdate.length} global commands: ${globalUpdate}`)
     // Put new global commands with REST
     if (globalAdd > 0) {
-      await client.application.commands.create(globalAdd)
+      try {
+        await rest.put(
+          Routes.applicationCommands(client.user.id),
+          { body: globalAdd }
+        )
+      } catch (error) {
+        console.error(error)
+      }
       console.log(`Created ${globalAdd.length} global commands: ${globalAdd.map((c) => c.name)}`)
     }
     // Delete global commands which don't exist anymore
-    for (const command of globalDelete) {
-      await client.application.commands.delete(command)
+    try {
+      for (const command of globalDelete) {
+        await client.application.commands.delete(command)
+      }
+    } catch (error) {
+      console.error(error)
     }
     if (globalDelete > 0) console.log(`Deleted ${globalDelete.length} global commands: ${globalDelete.map((c) => c.name)}`)
 
@@ -118,41 +114,17 @@ module.exports = {
         const commandJSON = command[1].data.toJSON()
         if ((command[1].guilds.includes(guild[1].id) || guild[1].id === process.env.TEST_GUILD_ID)) {
           const c = guildCommands.find((c) => c.name === commandJSON.name)
-          // Filter c values to compare with commandJSON
-          const filteredC = _.pick(c, 'type', 'name', 'nameLocalizations', 'description', 'descriptionLocalization', 'options', 'defaultPermissions', 'dmPermission')
-
           /**************************************************************/
           //? Remove undefined keys and values from filteredC & commandJSON
 
-          for (const key in filteredC) {
-            if (filteredC[key] == undefined || filteredC[key] == [] || filteredC[key] == {} || filteredC[key] == '') delete filteredC[key]
-          }
+          // Filter c values to compare with commandJSON
+          let filteredC = _.pick(c, 'type', 'name', 'nameLocalizations', 'description', 'descriptionLocalization', 'options', 'defaultPermissions', 'dmPermission')
           if (filteredC.type === 1) delete filteredC.type
-          Object.entries(filteredC).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-              value.forEach(item => {
-                Object.entries(item).forEach(([valueKey, val]) => {
-                  if (val === undefined) delete item[valueKey]
-                })
-              })
-            }
-          })
+          filteredC = removeEmpty(filteredC)
           // Make a copy of commandJSON to filter
-          const filteredCommandJSON = _.cloneDeep(commandJSON)
-          for (const key in filteredCommandJSON) {
-            if (filteredCommandJSON[key] == undefined || filteredCommandJSON[key] == [] || filteredCommandJSON[key] == {} || filteredCommandJSON[key] == '') delete filteredCommandJSON[key]
-          }
-          Object.entries(filteredCommandJSON).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-              value.forEach(item => {
-                Object.entries(item).forEach(([valueKey, val]) => {
-                  if (val === undefined) delete item[valueKey]
-                })
-              })
-            }
-          })
+          let filteredCommandJSON = _.cloneDeep(commandJSON)
+          filteredCommandJSON = removeEmpty(filteredCommandJSON)
           /**************************************************************/
-
           try {
             // Check if command changed
             if (_.isEqual(filteredC, filteredCommandJSON)) {
@@ -171,14 +143,24 @@ module.exports = {
         }
       }
       if (guildUpdate.length > 0) console.log(`Updated ${guildUpdate.length} commands in guild ${guild[1].id}: ${guildUpdate}`)
-
       if (guildAdd.length > 0) {
-        await guild[1].commands.create(guildAdd)
+        try {
+          await rest.put(
+            Routes.applicationGuildCommands(client.user.id, guild[1].id),
+            { body: guildAdd }
+          )
+        } catch (error) {
+          console.error(error)
+        }
         console.log(`Created ${guildAdd.length} commands in guild ${guild[1].id}: ${guildAdd.map((c) => c.name)}`)
       }
       // Delete guild commands which don't exist anymore
-      for (const command of guildDelete) {
-        await guild[1].commands.delete(command)
+      try {
+        for (const command of guildDelete) {
+          await guild[1].commands.delete(command)
+        }
+      } catch (error) {
+        console.error(error)
       }
       if (guildDelete.length > 0) console.log(`Deleted ${guildDelete.length} commands in guild ${guild[1].id}: ${guildDelete.map((c) => c.name)}`)
 
