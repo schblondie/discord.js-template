@@ -190,6 +190,7 @@ module.exports = {
               console.log(`Command ${commandJSON.name} in guild ${guild[1].id} is up to date`)
               guildDelete.splice(guildDelete.indexOf(c), 1)
             } else {
+              await guild[1].commands.edit(c, commandJSON)
               guildDelete.splice(guildDelete.indexOf(c), 1)
             }
           } catch (e) {
