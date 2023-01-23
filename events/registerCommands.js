@@ -39,6 +39,8 @@ module.exports = {
             !Object.keys(v).length ||
             v == null ||
             v == undefined ||
+            v == '' ||
+            v == [] ||
             v.length == 0
           ) {
             if (Array.isArray(object))
@@ -105,14 +107,12 @@ module.exports = {
       // Filter c values to compare with commandJSON
       let filteredC = await _.pick(globalCommand, 'type', 'name', 'choices', 'nameLocalizations', 'description', 'descriptionLocalizations', 'options', 'defaultPermissions', 'defaultMemberPermissions', 'dmPermission')
       if (filteredC.type === 1) delete filteredC.type
-      if (filteredC.defaultMemberPermissions)
-        filteredC = removeEmpty(filteredC)
+      filteredC = removeEmpty(filteredC)
       // Make a copy of commandJSON to filter
       let filteredCommandJSON = _.cloneDeep(commandJSON)
       filteredCommandJSON = removeEmpty(filteredCommandJSON)
       if (filteredCommandJSON.dmPermission === false) delete filteredCommandJSON.dmPermission
       if (filteredCommandJSON.defaultMemberPermissions) filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(filteredCommandJSON.defaultMemberPermissions)
-      else filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(0n)
       /**************************************************************/
 
       try {
@@ -120,9 +120,7 @@ module.exports = {
         if (_.isEqual(filteredC, filteredCommandJSON)) {
           globalDelete.splice(globalDelete.indexOf(globalCommand), 1)
         } else {
-          // Update command
-          await client.application.commands.edit(command[0], commandJSON)
-          await globalUpdate.push(commandJSON.name)
+          globalUpdate.push(commandJSON.name)
           globalDelete.splice(globalDelete.indexOf(globalCommand), 1)
         }
       } catch {
@@ -130,7 +128,17 @@ module.exports = {
         await globalAdd.push(commandJSON)
       }
     }
-    if (globalUpdate.length > 0) console.log(`Updated ${globalUpdate.length} global commands: ${globalUpdate}`)
+    if (globalUpdate > 0) {
+      try {
+        await rest.put(
+          Routes.applicationCommands(client.user.id),
+          { body: globalUpdate }
+        )
+      } catch (error) {
+        console.error(error)
+      }
+      console.log(`Created ${globalUpdate.length} global commands: ${globalUpdate.map((c) => c.name)}`)
+    }
     // Put new global commands with REST
     if (globalAdd > 0) {
       try {
@@ -141,7 +149,7 @@ module.exports = {
       } catch (error) {
         console.error(error)
       }
-      console.log(`Created ${globalAdd.length} global commands: ${globalAdd.map((c) => c.name)}`)
+      console.log(`Updated ${globalAdd.length} global commands: ${globalAdd.map((c) => c.name)}`)
     }
     // Delete global commands which don't exist anymore
     try {
@@ -174,32 +182,41 @@ module.exports = {
           // Filter c values to compare with commandJSON
           let filteredC = await _.pick(c, 'type', 'name', 'choices', 'nameLocalizations', 'description', 'descriptionLocalizations', 'options', 'defaultPermissions', 'defaultMemberPermissions', 'dmPermission')
           if (filteredC.type === 1) delete filteredC.type
-          if (filteredC.defaultMemberPermissions)
-            filteredC = removeEmpty(filteredC)
+          filteredC = removeEmpty(filteredC)
           // Make a copy of commandJSON to filter
           let filteredCommandJSON = _.cloneDeep(commandJSON)
           filteredCommandJSON = removeEmpty(filteredCommandJSON)
           if (filteredCommandJSON.dmPermission === false) delete filteredCommandJSON.dmPermission
           if (filteredCommandJSON.defaultMemberPermissions) filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(filteredCommandJSON.defaultMemberPermissions)
-          else filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(0n)
           /**************************************************************/
           try {
             // Check if command changed
             if (_.isEqual(filteredC, filteredCommandJSON)) {
               // Delete command from guildDelete array
-              console.log(`Command ${commandJSON.name} in guild ${guild[1].id} is up to date`)
               guildDelete.splice(guildDelete.indexOf(c), 1)
             } else {
-              await guild[1].commands.edit(c, commandJSON)
+              // Update command
+              guildUpdate.push(commandJSON)
               guildDelete.splice(guildDelete.indexOf(c), 1)
             }
           } catch (e) {
+            console.log(e)
             // Add command
             guildAdd.push(commandJSON)
           }
         }
       }
-      if (guildUpdate.length > 0) console.log(`Updated ${guildUpdate.length} commands in guild ${guild[1].id}: ${guildUpdate}`)
+      if (guildUpdate.length > 0) {
+        try {
+          await rest.put(
+            Routes.applicationGuildCommands(client.user.id, guild[1].id),
+            { body: guildUpdate }
+          )
+        } catch (error) {
+          console.error(error)
+        }
+        console.log(`Updated ${guildUpdate.length} commands in guild ${guild[1].id}: ${guildUpdate.map((c) => c.name)}`)
+      }
       if (guildAdd.length > 0) {
         try {
           await rest.put(
