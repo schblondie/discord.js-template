@@ -1,9 +1,11 @@
+/* eslint-disable no-console */
 //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //! DO NOT TOUCH THIS CODE UNLESS YOU KNOW WHAT YOU ARE DOING
 //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 const { REST } = require('@discordjs/rest')
 const { Routes } = require('discord-api-types/v10')
+const { PermissionsBitField } = require('discord.js')
 require('dotenv').config()
 const _ = require('lodash')
 
@@ -26,50 +28,102 @@ module.exports = {
     //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     //! DO NOT TOUCH THIS CODE UNLESS YOU KNOW WHAT YOU ARE DOING
     //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    function removeEmpty (obj) {
-      return Object.fromEntries(
-        Object.entries(obj)
-          .filter(([_, v]) => v != null && v != '' && v != [] && v != {})
-          .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : v])
-      )
+    function removeEmpty (object) {
+      Object
+        .entries(object)
+        .forEach(([k, v]) => {
+          if (v && typeof v === 'object')
+            removeEmpty(v);
+          if (v &&
+            typeof v === 'object' &&
+            !Object.keys(v).length ||
+            v === null ||
+            v === undefined ||
+            v.length === 0
+          ) {
+            if (Array.isArray(object))
+              object.splice(k, 1);
+            else if (!(v instanceof Date))
+              delete object[k];
+          }
+        });
+      return object;
     }
-    console.log('\x1b[31m%s\x1b[0m', `Starting command registration...`)
+    function transformChoice (choice) {
+      return {
+        name: choice.name,
+        nameLocalizations: choice.nameLocalizations ?? choice.name_localizations,
+        value: choice.value,
+        valueLocalizations: choice.valueLocalizations ?? choice.value_localizations
+      }
+    }
+    function transformOption (option) {
+      return {
+        choices: option.choices?.map(c => transformChoice(c)),
+        autocomplete: option.autocomplete,
+        type: option.type,
+        name: option.name,
+        nameLocalizations: option.nameLocalizations ?? option.name_localizations,
+        description: option.description,
+        descriptionLocalizations: option.descriptionLocalizations ?? option.description_localizations,
+        required: option.required,
+        maxLength: option.maxLength ?? option.max_length,
+        minLength: option.minLength ?? option.min_length
+      }
+    }
+    function transformCommand (command) {
+      return {
+        name: command.name,
+        nameLocalizations: command.nameLocalizations ?? command.name_localizations,
+        description: command.description,
+        nsfw: command.nsfw,
+        descriptionLocalizations: command.descriptionLocalizations ?? command.description_localizations,
+        type: command.type,
+        options: command.options?.map(o => transformOption(o)),
+        defaultMemberPermissions: command.defaultMemberPermissions ?? command.default_member_permissions,
+        dmPermission: command.dmPermission ?? command.dm_permission
+      };
+    }
+    console.log('\x1b[31m%s\x1b[0m', 'Starting command registration...')
     /**********************************************************************************************/
     //? Register global slash commands
 
     const globalCommandData = [...Array.from(client.globalSlashCommands), ...Array.from(client.globalContextMenuCommands)]
     const commandData = [...Array.from(client.slashCommands), ...Array.from(client.contextMenuCommands)]
-    const globalCommands = await client.application.commands.fetch()
+    const globalCommands = await client.application.commands.fetch({ withLocalizations: true })
     // Create lists of global commands to add, update and delete
     const globalAdd = []
     const globalUpdate = []
-    const globalDelete = globalCommands.map((c) => c.id)                              //? This list starts with all global commands
+    const globalDelete = _.cloneDeep(globalCommands)                            //? This list starts with all global commands
     // Loop through global commands
     for (const command of globalCommandData) {
-      const commandJSON = command[1].data.toJSON()
+      let commandJSON = command[1].data.toJSON()
+      commandJSON = transformCommand(commandJSON)
       const globalCommand = globalCommands.find((c) => c.name === commandJSON.name)
       /**************************************************************/
       //? Remove undefined keys and values from filteredC & commandJSON
-
       // Filter c values to compare with commandJSON
-      let filteredC = _.pick(globalCommand, 'type', 'name', 'nameLocalizations', 'description', 'descriptionLocalization', 'options', 'defaultPermissions', 'dmPermission')
-      // Remove type when it's 1 (slash command)
+      let filteredC = await _.pick(globalCommand, 'type', 'name', 'choices', 'nameLocalizations', 'description', 'descriptionLocalizations', 'options', 'defaultPermissions', 'defaultMemberPermissions', 'dmPermission')
       if (filteredC.type === 1) delete filteredC.type
-      filteredC = removeEmpty(filteredC)
+      if (filteredC.defaultMemberPermissions)
+        filteredC = removeEmpty(filteredC)
       // Make a copy of commandJSON to filter
       let filteredCommandJSON = _.cloneDeep(commandJSON)
       filteredCommandJSON = removeEmpty(filteredCommandJSON)
+      if (filteredCommandJSON.dmPermission === false) delete filteredCommandJSON.dmPermission
+      if (filteredCommandJSON.defaultMemberPermissions) filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(filteredCommandJSON.defaultMemberPermissions)
+      else filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(0n)
       /**************************************************************/
 
       try {
         // Check if command changed
         if (_.isEqual(filteredC, filteredCommandJSON)) {
-          globalDelete.splice(globalDelete.indexOf(command[0]), 1)
+          globalDelete.delete(globalCommand)
         } else {
           // Update command
           await client.application.commands.edit(command[0], commandJSON)
           await globalUpdate.push(commandJSON.name)
-          globalDelete.splice(globalDelete.indexOf(command[0]), 1)
+          globalDelete.delete(globalCommand)
         }
       } catch {
         // Add command
@@ -105,38 +159,42 @@ module.exports = {
     const guilds = await client.guilds.cache
     // Loop through guilds
     for (const guild of guilds) {
-      const guildCommands = await guild[1].commands.fetch()
+      const guildCommands = await guild[1].commands.fetch({ withLocalizations: true })
       // Create lists of commands to add, update and delete
       const guildAdd = []
       const guildUpdate = []
-      const guildDelete = guildCommands.map((c) => c.id)                              //? This list starts with all global commands
+      const guildDelete = _.cloneDeep(guildCommands)
       for (const command of commandData) {
-        const commandJSON = command[1].data.toJSON()
-        if ((command[1].guilds.includes(guild[1].id) || guild[1].id === process.env.TEST_GUILD_ID)) {
+        let commandJSON = command[1].data.toJSON()
+        commandJSON = transformCommand(commandJSON)
+        if ((command[1].guilds && (command[1].guilds.includes(guild[1].id)) || guild[1].id === process.env.TEST_GUILD_ID)) {
           const c = guildCommands.find((c) => c.name === commandJSON.name)
           /**************************************************************/
           //? Remove undefined keys and values from filteredC & commandJSON
-
           // Filter c values to compare with commandJSON
-          let filteredC = _.pick(c, 'type', 'name', 'nameLocalizations', 'description', 'descriptionLocalization', 'options', 'defaultPermissions', 'dmPermission')
+          let filteredC = await _.pick(c, 'type', 'name', 'choices', 'nameLocalizations', 'description', 'descriptionLocalizations', 'options', 'defaultPermissions', 'defaultMemberPermissions', 'dmPermission')
           if (filteredC.type === 1) delete filteredC.type
-          filteredC = removeEmpty(filteredC)
+          if (filteredC.defaultMemberPermissions)
+            filteredC = removeEmpty(filteredC)
           // Make a copy of commandJSON to filter
           let filteredCommandJSON = _.cloneDeep(commandJSON)
           filteredCommandJSON = removeEmpty(filteredCommandJSON)
+          if (filteredCommandJSON.dmPermission === false) delete filteredCommandJSON.dmPermission
+          if (filteredCommandJSON.defaultMemberPermissions) filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(filteredCommandJSON.defaultMemberPermissions)
+          else filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(0n)
           /**************************************************************/
           try {
             // Check if command changed
             if (_.isEqual(filteredC, filteredCommandJSON)) {
-              guildDelete.splice(guildDelete.indexOf(c.id), 1)
+              // Remove command from guildDelete object
+              guildDelete.delete(c)
             } else {
               // Update command
               await guild[1].commands.edit(c, commandJSON)
               await guildUpdate.push(commandJSON.name)
-              guildDelete.splice(guildDelete.indexOf(c.id), 1)
+              guildDelete.delete(c)
             }
-          }
-          catch {
+          } catch {
             // Add command
             guildAdd.push(commandJSON)
           }
@@ -156,9 +214,9 @@ module.exports = {
       }
       // Delete guild commands which don't exist anymore
       try {
-        for (const command of guildDelete) {
-          await guild[1].commands.delete(command)
-        }
+        // for (const command of guildDelete) {
+        //   await guild[1].commands.delete(command[1])
+        // }
       } catch (error) {
         console.error(error)
       }
