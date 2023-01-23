@@ -107,7 +107,7 @@ for (const module of userContextMenuCommands) {
     client.contextMenuCommands.set(command.data.name, command)                        // Registering the command in the Collection.
   }
 }
-for (module of messageContextMenuCommands) {
+for (const module of messageContextMenuCommands) {
   const commandFiles = fs
     .readdirSync(`./interactions/contextMenus/message/${module}`)
     .filter((file) => file.endsWith('.js'))
