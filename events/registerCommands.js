@@ -37,9 +37,9 @@ module.exports = {
           if (v &&
             typeof v === 'object' &&
             !Object.keys(v).length ||
-            v == null ||
-            v == undefined ||
-            v.length == 0
+            v === null ||
+            v === undefined ||
+            v.length === 0
           ) {
             if (Array.isArray(object))
               object.splice(k, 1);
@@ -94,7 +94,7 @@ module.exports = {
     // Create lists of global commands to add, update and delete
     const globalAdd = []
     const globalUpdate = []
-    const globalDelete = globalCommands.map(c => c)
+    const globalDelete = _.cloneDeep(globalCommands)                            //? This list starts with all global commands
     // Loop through global commands
     for (const command of globalCommandData) {
       let commandJSON = command[1].data.toJSON()
@@ -118,12 +118,12 @@ module.exports = {
       try {
         // Check if command changed
         if (_.isEqual(filteredC, filteredCommandJSON)) {
-          globalDelete.splice(globalDelete.indexOf(globalCommand), 1)
+          globalDelete.delete(globalCommand)
         } else {
           // Update command
           await client.application.commands.edit(command[0], commandJSON)
           await globalUpdate.push(commandJSON.name)
-          globalDelete.splice(globalDelete.indexOf(globalCommand), 1)
+          globalDelete.delete(globalCommand)
         }
       } catch {
         // Add command
@@ -163,7 +163,7 @@ module.exports = {
       // Create lists of commands to add, update and delete
       const guildAdd = []
       const guildUpdate = []
-      const guildDelete = guildCommands.map((c) => c)                            //? This list starts with all guild commands
+      const guildDelete = _.cloneDeep(guildCommands)
       for (const command of commandData) {
         let commandJSON = command[1].data.toJSON()
         commandJSON = transformCommand(commandJSON)
@@ -186,13 +186,15 @@ module.exports = {
           try {
             // Check if command changed
             if (_.isEqual(filteredC, filteredCommandJSON)) {
-              // Delete command from guildDelete array
-              console.log(`Command ${commandJSON.name} in guild ${guild[1].id} is up to date`)
-              guildDelete.splice(guildDelete.indexOf(c), 1)
+              // Remove command from guildDelete object
+              guildDelete.delete(c)
             } else {
-              guildDelete.splice(guildDelete.indexOf(c), 1)
+              // Update command
+              await guild[1].commands.edit(c, commandJSON)
+              await guildUpdate.push(commandJSON.name)
+              guildDelete.delete(c)
             }
-          } catch (e) {
+          } catch {
             // Add command
             guildAdd.push(commandJSON)
           }
@@ -212,9 +214,9 @@ module.exports = {
       }
       // Delete guild commands which don't exist anymore
       try {
-        for (const command of guildDelete) {
-          await guild[1].commands.delete(command)
-        }
+        // for (const command of guildDelete) {
+        //   await guild[1].commands.delete(command[1])
+        // }
       } catch (error) {
         console.error(error)
       }
