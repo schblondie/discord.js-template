@@ -20,7 +20,7 @@ require('dotenv').config()                                                      
 
 const Discord = require('discord.js')
 const client = new Client({
-  intents: new Discord.IntentsBitField([                                              // Uncomment the intents you want to use. //? https://discord.com/developers/docs/topics/gateway#list-of-intents
+  intents: new Discord.IntentsBitField(                                               // Uncomment the intents you want to use. //? https://discord.com/developers/docs/topics/gateway#list-of-intents
     // GatewayIntentBits.Guilds,
     // GatewayIntentBits.GuildMembers, //! Privileged Intent
     // GatewayIntentBits.GuildModeration,
@@ -40,7 +40,7 @@ const client = new Client({
     // GatewayIntentBits.GuildScheduledEvents,
     // GatewayIntentBits.AutoModerationConfiguration,
     // GatewayIntentBits.AutoModerationExecution
-  ])
+  )
 })
 module.exports = client                                                               // Exporting the client for other files to use.
 
