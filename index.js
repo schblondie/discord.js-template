@@ -6,10 +6,7 @@
 // Importing all required modules.
 const fs = require('fs')                                                              // File System
 const { Client, Collection, GatewayIntentBits } = require('discord.js')               // Importing required discord.js modules
-const { REST } = require('@discordjs/rest')                                           // REST API
-const { Routes } = require('discord-api-types/v10')                                   // Routes for REST API
 require('dotenv').config()                                                            // Accessing .env file
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN)                  // Creating a new REST instance. 
 
 /**
  * @description The Discord Client.
@@ -79,7 +76,7 @@ client.globalSlashCommands = new Collection()
 client.autoCompleteCommands = new Collection()
 
 const slashCommands = fs.readdirSync('./interactions/slash')                          // All slash commands are stored in this folder.
-for (module of slashCommands) {
+for (const module of slashCommands) {
   const commandFiles = fs
     .readdirSync(`./interactions/slash/${module}`)
     .filter((file) => file.endsWith('.js'))
@@ -98,7 +95,7 @@ client.globalContextMenuCommands = new Collection()
 
 const userContextMenuCommands = fs.readdirSync('./interactions/contextMenus/user')
 const messageContextMenuCommands = fs.readdirSync('./interactions/contextMenus/message')
-for (module of userContextMenuCommands) {
+for (const module of userContextMenuCommands) {
   const commandFiles = fs
     .readdirSync(`./interactions/contextMenus/user/${module}`)
     .filter((file) => file.endsWith('.js'))
