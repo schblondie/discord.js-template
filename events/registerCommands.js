@@ -120,20 +120,22 @@ module.exports = {
         if (_.isEqual(filteredC, filteredCommandJSON)) {
           globalDelete.splice(globalDelete.indexOf(globalCommand), 1)
         } else {
-          globalUpdate.push(commandJSON.name)
-          globalDelete.splice(globalDelete.indexOf(globalCommand), 1)
+          if (globalCommand) {
+            globalUpdate.push(commandJSON.name)
+            globalDelete.splice(globalDelete.indexOf(globalCommand), 1)
+          } else {
+            globalAdd.push(commandJSON)
+          }
         }
       } catch {
-        // Add command
-        await globalAdd.push(commandJSON)
+        console.error('Error while comparing commands')
       }
     }
     if (globalUpdate > 0) {
       try {
-        await rest.put(
-          Routes.applicationCommands(client.user.id),
-          { body: globalUpdate }
-        )
+        for (const command of globalUpdate) {
+          client.application.commands.edit(command)
+        }
       } catch (error) {
         console.error(error)
       }
@@ -142,10 +144,9 @@ module.exports = {
     // Put new global commands with REST
     if (globalAdd > 0) {
       try {
-        await rest.put(
-          Routes.applicationCommands(client.user.id),
-          { body: globalAdd }
-        )
+        for (const command of globalAdd) {
+          client.application.commands.create(command)
+        }
       } catch (error) {
         console.error(error)
       }
@@ -154,7 +155,7 @@ module.exports = {
     // Delete global commands which don't exist anymore
     try {
       for (const command of globalDelete) {
-        await client.application.commands.delete(command)
+        client.application.commands.delete(command)
       }
     } catch (error) {
       console.error(error)
@@ -196,25 +197,24 @@ module.exports = {
               guildDelete.splice(guildDelete.indexOf(c), 1)
             } else {
               // Update command
-              console.log(c)
-              console.log(filteredC)
-              console.log(filteredCommandJSON)
-              guildUpdate.push(commandJSON)
-              guildDelete.splice(guildDelete.indexOf(c), 1)
+              if (c) {
+                console.log(filteredC)
+                console.log(filteredCommandJSON)
+                guildUpdate.push(commandJSON)
+                guildDelete.splice(guildDelete.indexOf(c), 1)
+              }
+              else guildAdd.push(commandJSON)
             }
-          } catch (e) {
-            console.log(e)
-            // Add command
-            guildAdd.push(commandJSON)
+          } catch {
+            console.error('Error while comparing commands')
           }
         }
       }
       if (guildUpdate.length > 0) {
         try {
-          await rest.put(
-            Routes.applicationGuildCommands(client.user.id, guild[1].id),
-            { body: guildUpdate }
-          )
+          for (const command of guildUpdate) {
+            guild[1].commands.edit(command)
+          }
         } catch (error) {
           console.error(error)
         }
@@ -222,10 +222,9 @@ module.exports = {
       }
       if (guildAdd.length > 0) {
         try {
-          await rest.put(
-            Routes.applicationGuildCommands(client.user.id, guild[1].id),
-            { body: guildAdd }
-          )
+          for (const command of guildAdd) {
+            guild[1].commands.create(command)
+          }
         } catch (error) {
           console.error(error)
         }
