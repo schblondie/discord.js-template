@@ -12,7 +12,6 @@ module.exports = {
      * @property {import('discord.js').Client} client - The client of the interaction.
     */
     const { client } = interaction
-    if (!interaction.isCommand() && !interaction.isModalSubmit() && !interaction.isAutocomplete()) return
     if (interaction.isButton()) {
       try {
         await client.buttonCommands.get(interaction.customId).execute(interaction)
