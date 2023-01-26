@@ -48,9 +48,8 @@ module.exports = {
     }
     // Modal
     if (interaction.isModalSubmit()) {
-      console.log('Modal submit')
       try {
-        await client.modalCommands.get(interaction.commandName).execute(interaction)
+        await client.modalCommands.get(interaction.customId).execute(interaction)
         return
       }
       catch (err) {
