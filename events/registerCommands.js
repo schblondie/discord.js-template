@@ -100,7 +100,6 @@ module.exports = {
     // Loop through global commands
     for (const command of globalCommandData) {
       let commandJSON = command[1].data.toJSON()
-      commandJSON = transformCommand(commandJSON)
       const globalCommand = globalCommands.find((c) => c.name === commandJSON.name)
       /**************************************************************/
       //? Remove undefined keys and values from filteredC & commandJSON
@@ -110,6 +109,7 @@ module.exports = {
       filteredC = removeEmpty(filteredC)
       // Make a copy of commandJSON to filter
       let filteredCommandJSON = _.cloneDeep(commandJSON)
+      filteredCommandJSON = transformCommand(filteredCommandJSON)
       filteredCommandJSON = removeEmpty(filteredCommandJSON)
       if (filteredCommandJSON.dmPermission === false) delete filteredCommandJSON.dmPermission
       if (filteredCommandJSON.defaultMemberPermissions) filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(filteredCommandJSON.defaultMemberPermissions)
@@ -174,7 +174,6 @@ module.exports = {
       const guildDelete = guildCommands.map((c) => c)                            //? This list starts with all guild commands
       for (const command of commandData) {
         let commandJSON = command[1].data.toJSON()
-        commandJSON = transformCommand(commandJSON)
         if ((command[1].guilds && (command[1].guilds.includes(guild[1].id)) || guild[1].id === process.env.TEST_GUILD_ID)) {
           const c = guildCommands.find((c) => c.name === commandJSON.name)
           /**************************************************************/
@@ -185,6 +184,7 @@ module.exports = {
           filteredC = removeEmpty(filteredC)
           // Make a copy of commandJSON to filter
           let filteredCommandJSON = _.cloneDeep(commandJSON)
+          filteredCommandJSON = transformCommand(filteredCommandJSON)
           filteredCommandJSON = removeEmpty(filteredCommandJSON)
           if (filteredCommandJSON.dmPermission === false) delete filteredCommandJSON.dmPermission
           if (filteredCommandJSON.defaultMemberPermissions) filteredCommandJSON.defaultMemberPermissions = new PermissionsBitField(filteredCommandJSON.defaultMemberPermissions)
@@ -196,6 +196,9 @@ module.exports = {
               guildDelete.splice(guildDelete.indexOf(c), 1)
             } else {
               // Update command
+              console.log(c)
+              console.log(filteredC)
+              console.log(filteredCommandJSON)
               guildUpdate.push(commandJSON)
               guildDelete.splice(guildDelete.indexOf(c), 1)
             }
@@ -231,7 +234,7 @@ module.exports = {
       // Delete guild commands which don't exist anymore
       try {
         for (const command of guildDelete) {
-          await guild[1].commands.delete(command)
+          guild[1].commands.delete(command)
         }
       } catch (error) {
         console.error(error)
