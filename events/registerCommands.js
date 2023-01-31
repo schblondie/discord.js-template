@@ -1,15 +1,14 @@
+/* eslint-disable no-mixed-operators */
+/* eslint-disable eqeqeq */
 /* eslint-disable no-console */
 //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //! DO NOT TOUCH THIS CODE UNLESS YOU KNOW WHAT YOU ARE DOING
 //! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-const { REST } = require('@discordjs/rest')
-const { Routes } = require('discord-api-types/v10')
 const { PermissionsBitField } = require('discord.js')
 require('dotenv').config()
 const _ = require('lodash')
 
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN)
 /**
  * @file Command registration
  * @since 1.0.0
@@ -32,8 +31,7 @@ module.exports = {
       Object
         .entries(object)
         .forEach(([k, v]) => {
-          if (v && typeof v === 'object')
-            removeEmpty(v);
+          if (v && typeof v === 'object') { removeEmpty(v) }
           if (v &&
             typeof v === 'object' &&
             !Object.keys(v).length ||
@@ -43,13 +41,10 @@ module.exports = {
             v == [] ||
             v.length == 0
           ) {
-            if (Array.isArray(object))
-              object.splice(k, 1);
-            else if (!(v instanceof Date))
-              delete object[k];
+            if (Array.isArray(object)) { object.splice(k, 1) } else if (!(v instanceof Date)) { delete object[k] }
           }
-        });
-      return object;
+        })
+      return object
     }
     function transformChoice (choice) {
       return {
@@ -84,11 +79,11 @@ module.exports = {
         options: command.options?.map(o => transformOption(o)),
         defaultMemberPermissions: command.defaultMemberPermissions ?? command.default_member_permissions,
         dmPermission: command.dmPermission ?? command.dm_permission
-      };
+      }
     }
     console.log('\x1b[31m%s\x1b[0m', 'Starting command registration...')
     /**********************************************************************************************/
-    //? Register global slash commands
+    // ? Register global slash commands
 
     const globalCommandData = [...Array.from(client.globalSlashCommands), ...Array.from(client.globalContextMenuCommands)]
     const commandData = [...Array.from(client.slashCommands), ...Array.from(client.contextMenuCommands)]
@@ -99,10 +94,10 @@ module.exports = {
     const globalDelete = globalCommands.map(c => c)
     // Loop through global commands
     for (const command of globalCommandData) {
-      let commandJSON = command[1].data.toJSON()
+      const commandJSON = command[1].data.toJSON()
       const globalCommand = globalCommands.find((c) => c.name === commandJSON.name)
       /**************************************************************/
-      //? Remove undefined keys and values from filteredC & commandJSON
+      // ? Remove undefined keys and values from filteredC & commandJSON
       // Filter c values to compare with commandJSON
       let filteredC = await _.pick(globalCommand, 'type', 'name', 'choices', 'nameLocalizations', 'description', 'descriptionLocalizations', 'options', 'defaultPermissions', 'defaultMemberPermissions', 'dmPermission')
       if (filteredC.type === 1) delete filteredC.type
@@ -134,7 +129,8 @@ module.exports = {
     if (globalUpdate > 0) {
       try {
         for (const command of globalUpdate) {
-          client.application.commands.edit(command)
+          const commandId = globalCommands.find((c) => c.name === command).id
+          client.application.commands.edit(commandId, command)
         }
       } catch (error) {
         console.error(error)
@@ -163,7 +159,7 @@ module.exports = {
     if (globalDelete > 0) console.log(`Deleted ${globalDelete.length} global commands: ${globalDelete.map((c) => c.name)}`)
 
     /**********************************************************************************************/
-    //? Register guild slash commands
+    // ? Register guild slash commands
 
     const guilds = await client.guilds.cache
     // Loop through guilds
@@ -172,13 +168,13 @@ module.exports = {
       // Create lists of commands to add, update and delete
       const guildAdd = []
       const guildUpdate = []
-      const guildDelete = guildCommands.map((c) => c)                            //? This list starts with all guild commands
+      const guildDelete = guildCommands.map((c) => c) // ? This list starts with all guild commands
       for (const command of commandData) {
-        let commandJSON = command[1].data.toJSON()
+        const commandJSON = command[1].data.toJSON()
         if ((command[1].guilds && (command[1].guilds.includes(guild[1].id)) || guild[1].id === process.env.TEST_GUILD_ID)) {
           const c = guildCommands.find((c) => c.name === commandJSON.name)
           /**************************************************************/
-          //? Remove undefined keys and values from filteredC & commandJSON
+          // ? Remove undefined keys and values from filteredC & commandJSON
           // Filter c values to compare with commandJSON
           let filteredC = await _.pick(c, 'type', 'name', 'choices', 'nameLocalizations', 'description', 'descriptionLocalizations', 'options', 'defaultPermissions', 'defaultMemberPermissions', 'dmPermission')
           if (filteredC.type === 1) delete filteredC.type
@@ -198,12 +194,9 @@ module.exports = {
             } else {
               // Update command
               if (c) {
-                console.log(filteredC)
-                console.log(filteredCommandJSON)
                 guildUpdate.push(commandJSON)
                 guildDelete.splice(guildDelete.indexOf(c), 1)
-              }
-              else guildAdd.push(commandJSON)
+              } else guildAdd.push(commandJSON)
             }
           } catch {
             console.error('Error while comparing commands')
@@ -213,7 +206,8 @@ module.exports = {
       if (guildUpdate.length > 0) {
         try {
           for (const command of guildUpdate) {
-            guild[1].commands.edit(command)
+            const commandId = guildCommands.find((c) => c.name === command.name).id
+            guild[1].commands.edit(commandId, command)
           }
         } catch (error) {
           console.error(error)
