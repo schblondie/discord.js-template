@@ -65,7 +65,8 @@ module.exports = {
         descriptionLocalizations: option.descriptionLocalizations ?? option.description_localizations,
         required: option.required,
         maxLength: option.maxLength ?? option.max_length,
-        minLength: option.minLength ?? option.min_length
+        minLength: option.minLength ?? option.min_length,
+        options: option.options?.map(o => transformOption(o))
       }
     }
     function transformCommand (command) {
