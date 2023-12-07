@@ -13,6 +13,7 @@ const _ = require('lodash')
 /**
  * @file Command registration
  * @since 1.0.0
+ * @version 2.0.0
 */
 
 module.exports = {

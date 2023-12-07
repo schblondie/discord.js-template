@@ -5,10 +5,10 @@
 const chokidar = require('chokidar')
 const { loadClientEvents, loadClientInteractions } = require('../../../register')
 /**
- * @file Ready Event File.
+ * @file Hot Reloading of Interactions and Events
  * @since 1.0.0
+ * @version 2.0.0
 */
-
 module.exports = {
   name: 'ready',
   once: true,

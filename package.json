@@ -10,7 +10,7 @@
   },
   "name": "discord.js-template",
   "description": "A simple discord.js template",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "index.js",
   "scripts": {
     "start": "npm i && node src/bot.js",
