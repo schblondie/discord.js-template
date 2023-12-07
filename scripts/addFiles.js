@@ -500,7 +500,7 @@ const runScript = async () => {
       name:    'interactionType',
       message: 'Which type of interaction to add?',
       choices: [
-        'SlashCommand', 'ContextMenuCommand', 'ButtonInteraction', 'SelectMenuInteraction', 'ModalInteraction', 'Event', 'Exit'
+        'SlashCommand', 'ContextMenuCommand', 'ButtonInteraction', 'SelectMenuInteraction', 'ModalInteraction', 'Event', chalk.red('Exit')
       ],
     },
   ])
@@ -525,7 +525,8 @@ const runScript = async () => {
     case 'Event':
       await addEvent(inquirer)
       break
-    case 'Exit':
+    case chalk.red('Exit'):
+      console.log(chalk.yellow('Exiting...'))
       return process.exit(0)
     default:
       console.log(chalk.red('Invalid interaction type.'))
