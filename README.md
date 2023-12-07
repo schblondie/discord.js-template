@@ -1,4 +1,5 @@
 # discord.js-template
+
 A simple discord.js template </br>
 Make sure to ⭐ this repository if you found it useful </br>
 <h2>Getting Started</h2>
@@ -13,21 +14,41 @@ TEST_GUILD_ID=Your Test Guild Id
 ``` 
 [How to get your bot token](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot) </br>
 [How to get your guild ID](https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-)</br>
-Run the following commands in the terminal to get started </br>
+<h3>Development</h3>
+
+Run the following command in the terminal once to install the dependencies
 
 ```bash
 npm install
-node .
 ```
-</br>
+
+Run the following command in the terminal to start the bot
+```bash
+
+npm run dev
+```
+
+You can run the following command to interactively add interaction and event files to the directory
+
+```bash
+npm run add
+```
+
+<h3>Production</h3>
+
+Run the following command in the terminal to automatically install the dependencies and start the bot
+
+```bash
+npm run start
+```
+
 <h2>Useful Links</h2>
 
-Use [BetterComments](https://marketplace.visualstudio.com/items?itemName=aaron-bond.better-comments) to see comments with colors
-
+[BetterComments](https://marketplace.visualstudio.com/items?itemName=aaron-bond.better-comments) - see comments with colors </br>
 [Discord.js Docs](https://discord.js.org/#/docs/main/stable/general/welcome) </br>
 [Discord.js Guide](https://discordjs.guide/)</br>
 [Discord.js Discord](https://discord.gg/djs)</br>
-</br>
+
 <h2>License</h2>
 
 This repository is licensed under the MIT License - see the [LICENSE](LICENSE) file for details </br>
