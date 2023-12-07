@@ -1,8 +1,6 @@
 # All events are stored in this directory.
 Use `npm run add` to interactively add events to the directory.
-<br>
-<br>
-<br>
+
 <h1> WARNING! </h1>
 <h3> DO NOT EDIT OR DELETE THESE FILES </h3>
 
